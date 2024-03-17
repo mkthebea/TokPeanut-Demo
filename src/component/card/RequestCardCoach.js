@@ -4,9 +4,8 @@ import styled from "@emotion/styled";
 import { createTheme, Divider, Icon, ThemeProvider } from "@mui/material";
 import { Box, IconButton, Button, Grid } from "@mui/material";
 import theme from "../../style/theme";
-import api from "../../api";
 
-export default function RequestCardCoach({ userName, type, id, setter }) {
+export default function RequestCardCoach({ userName, type, id }) {
   const theme = createTheme({
     typography: {
       fontFamily: "Pretendard",
@@ -21,26 +20,6 @@ export default function RequestCardCoach({ userName, type, id, setter }) {
     },
   });
   const navigate = useNavigate();
-
-  const accept = useCallback(async () => {
-    try {
-      const res = await api.post(`/coaching-request/${id}/accept`);
-      console.log("accept request res:", res);
-      setter();
-    } catch (err) {
-      console.log("accept request err:", err);
-    }
-  }, [id, setter]);
-
-  const reject = useCallback(async () => {
-    try {
-      const res = await api.post(`/coaching-request/${id}/deny`);
-      console.log("reject request res:", res);
-      setter();
-    } catch (err) {
-      console.log("reject request err:", err);
-    }
-  }, [id, setter]);
 
   return (
     <>
@@ -63,12 +42,8 @@ export default function RequestCardCoach({ userName, type, id, setter }) {
                     스크립트보기
                   </Button>
                   <div className="btn-wrap">
-                    <Button variant="contained" onClick={accept}>
-                      수락
-                    </Button>
-                    <Button variant="outlined" onClick={reject}>
-                      거절
-                    </Button>
+                    <Button variant="contained">수락</Button>
+                    <Button variant="outlined">거절</Button>
                   </div>
                 </>
               )}
@@ -76,7 +51,7 @@ export default function RequestCardCoach({ userName, type, id, setter }) {
                 <>
                   <FeedBackBtn
                     variant="contained"
-                    onClick={() => navigate(`/feedback?matching_id=${id}`)}
+                    onClick={() => navigate(`/feedback`)}
                   >
                     피드백 하기
                   </FeedBackBtn>

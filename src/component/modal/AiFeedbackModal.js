@@ -9,12 +9,11 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import theme from "../../style/theme";
-import axios from "axios";
 
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 
-export default function AiFeedbackModal({ speech_id }) {
+export default function AiFeedbackModal() {
   const theme = createTheme({
     typography: {
       fontFamily: "Pretendard",
@@ -34,7 +33,6 @@ export default function AiFeedbackModal({ speech_id }) {
   const handleOpen = () => {
     setOpen(true);
     setTimeout(() => {
-      // scrollDown();
       messageRef.current.scrollIntoView(); // 스크롤 효과 없이 바로 맨 아래로
     }, 1);
   };
@@ -42,82 +40,46 @@ export default function AiFeedbackModal({ speech_id }) {
     setOpen(false);
   };
 
-  const [data, setData] = useState([]);
-
-  const setLogs = (logs) => {
-    let chatLogs = [];
-    for (let i = 0; i < logs.length; i += 2) {
-      chatLogs.push({
-        prompt: logs[i].content,
-        result: logs[i + 1].content,
-      });
-    }
-    setData(chatLogs);
-  };
-  const getLogs = useCallback(async () => {
-    let res = null;
-    try {
-      res = await axios.get(
-        `https://api2.tokpeanut.com/api/v1/ai-chat-logs/${speech_id}`
-      );
-      if (res.status === 200) setLogs(res.data);
-      // console.log("ai 피드백 목록 조회 응답: ", res);
-    } catch (err) {
-      console.log("🩸ai 피드백 목록 조회 에러: ", err);
-    }
-    return res.status;
-  }, [speech_id]);
-
-  const [promptDone, setPromptDone] = useState(false);
-
-  const setPrompt = useCallback(async () => {
-    try {
-      const res = await axios.post(
-        `https://api2.tokpeanut.com/api/v1/ai-chat-logs/${speech_id}/initialize`
-      );
-      if (res.status === 200 || res.status === 409) {
-        setPromptDone(true);
-        setAiDone(true);
-        console.log("ai 피드백 프롬프트 준비: ", res);
-      }
-    } catch (err) {
-      console.log("🩸ai 피드백 프롬프트 준비: ", err);
-    }
-  }, [speech_id]);
+  const [data, setData] = useState([
+    {
+      prompt: "Open AI API와 연동된 AI 챗봇 기능입니다.",
+      result:
+        "AI 챗봇 기능으로 스크립트의 내용 대한 피드백을 받을 수 있습니다.",
+    },
+  ]);
 
   useEffect(() => {
-    setPrompt();
-  }, [setPrompt]);
+    setAiDone(true);
+  }, []);
 
-  useEffect(() => {
-    if (!promptDone) return;
-    getLogs();
-  }, [getLogs, promptDone]);
+  const createExampleAnswer = useCallback(
+    (prompt) => {
+      setTimeout(() => {
+        const tem = {
+          prompt: prompt,
+          result:
+            "현재 데모 버전을 이용중으로, AI 챗봇 기능은 동작하지 않습니다.",
+        };
+        setData([...data, tem]);
+      }, 2000);
+    },
+    [data]
+  );
 
-  const newCheckPoint = async (e) => {
-    e.preventDefault();
-    const newPrompt = e.target[0].value;
-    e.target[0].value = "";
-    const tem = {
-      prompt: newPrompt,
-      result: "waiting",
-    };
-    setData([...data, tem]);
-    try {
-      const res = await axios.post(
-        `https://api2.tokpeanut.com/api/v1/ai-chat-logs/${speech_id}`,
-        {
-          prompt: newPrompt,
-        }
-      );
-      if (res.status === 200) {
-        getLogs();
-      }
-      // console.log("ai 피드백 추가 응답: ", res);
-    } catch (err) {
-      console.log("🩸ai 피드백 추가 에러: ", err);
-    }
-  };
+  const newCheckPoint = useCallback(
+    (e) => {
+      e.preventDefault();
+      const newPrompt = e.target[0].value;
+      e.target[0].value = "";
+      const tem = {
+        prompt: newPrompt,
+        result: "waiting",
+      };
+      setData([...data, tem]);
+      createExampleAnswer(newPrompt);
+    },
+    [data, createExampleAnswer]
+  );
 
   const messageRef = useRef(null);
   // 채팅창 스크롤 맨 아래로
@@ -135,7 +97,6 @@ export default function AiFeedbackModal({ speech_id }) {
     <ThemeProvider theme={theme}>
       <FilledBtn text={"AI 피드백"} onClick={handleOpen} />
       <AiFeedbackModalWrap
-        //    sx={style}
         fullScreen={fullScreen}
         open={open}
         onClose={handleClose}

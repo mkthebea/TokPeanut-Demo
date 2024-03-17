@@ -7,7 +7,6 @@ import Nav from "../../component/layout/Nav";
 import theme from "../../style/theme";
 import RequestCardUser from "../../component/card/RequestCardUser";
 import PaginationBox from "../../component/pagination/Pagination";
-import api from "../../api";
 
 const Item = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -25,19 +24,32 @@ const MyMatching = () => {
     },
   });
 
-  const [requestList, setRequestList] = useState([]);
-  const getRequestList = useCallback(async () => {
-    try {
-      const res = await api.get("/coaching-request");
-      console.log("request list res:", res);
-      setRequestList(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  }, [setRequestList]);
-  useEffect(() => {
-    getRequestList();
-  }, [getRequestList]);
+  const requestList = [
+    {
+      id: 1,
+      title: "면접 연습",
+      coachNickname: "Alice",
+      status: "REQUESTED",
+    },
+    {
+      id: 2,
+      title: "발표 연습",
+      coachNickname: "Bob",
+      status: "ACCEPTED",
+    },
+    {
+      id: 3,
+      title: "토론 연습",
+      coachNickname: "Carol",
+      status: "DENIED",
+    },
+    {
+      id: 4,
+      title: "토론 연습",
+      coachNickname: "David",
+      status: "DONE",
+    },
+  ];
 
   return (
     <>

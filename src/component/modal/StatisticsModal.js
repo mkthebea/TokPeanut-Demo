@@ -10,13 +10,8 @@ import theme from "../../style/theme";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import CircleIcon from "@mui/icons-material/Circle";
-import { ResponsiveLine } from "@nivo/line";
 
-export default function StatisticsModal({
-  presentaion_id,
-  speech_id,
-  statistics,
-}) {
+export default function StatisticsModal({ statistics }) {
   const theme = createTheme({
     typography: {
       fontFamily: "Pretendard",
@@ -35,8 +30,7 @@ export default function StatisticsModal({
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  // 분석이 완료된 경우만 통계 모달을 띄워줌 -> 여기서 분석 결과 받아오기
-  // mock data
+  // dummy data
   const data = {
     pitch: [
       {
@@ -72,28 +66,6 @@ export default function StatisticsModal({
     pause: statistics.pause,
   };
 
-  const PitchLine = useCallback(
-    () => (
-      <ResponsiveLine
-        data={data.pitch}
-        margin={{ top: 20, right: 20, bottom: 20, left: 25 }}
-        xScale={{ type: "point" }}
-        yScale={{
-          type: "linear",
-          min: 0,
-          stacked: true,
-          reverse: false,
-        }}
-        enableGridY={false}
-        enableGridX={false}
-        colors="#FF7134"
-        pointSize={0}
-        lineWidth={1}
-      />
-    ),
-    []
-  );
-
   return (
     <ThemeProvider theme={theme}>
       <FilledBtn text={"통계 보기"} onClick={handleOpen} />
@@ -111,19 +83,6 @@ export default function StatisticsModal({
             </IconButton>
           </div>
           <ul className="statistcs-wrap">
-            {/* <li>
-              <div className="sub-title">
-                <CircleIcon />
-                <h2>억양 변화</h2>
-              </div>
-              <p>
-                억양의 변화가 많은 목소리는 더 영향력 있는 스피치를 만듭니다.
-                <br /> 아래 그래프에서 억양 변화를 확인하세요.
-              </p>
-              <div className="graph-box">
-                <PitchLine />
-              </div>
-            </li> */}
             <li>
               <div className="sub-title">
                 <CircleIcon />
@@ -169,7 +128,7 @@ export default function StatisticsModal({
                 말하기의 전달력을 높이려면 휴지 비율을 전체 20~25% 사이로
                 유지하는 것이 좋습니다.
                 <br /> 또한 느린 속도(300음절/min)의 경우 1.5초, 빠른
-                속도(400음절/min(의 경우 0.4초가 적절한 문장간 휴지입니다.
+                속도(400음절/min)의 경우 0.4초가 적절한 문장간 휴지입니다.
               </p>
             </li>
           </ul>

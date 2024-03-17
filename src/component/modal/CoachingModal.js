@@ -11,7 +11,6 @@ import theme from "../../style/theme";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
-import api from "../../api";
 import AuthContext from "../../AuthContext";
 
 const CoachingModal = ({ coachUuid }) => {
@@ -56,59 +55,23 @@ const CoachingModal = ({ coachUuid }) => {
     setIsSpSelected(true);
   };
 
-  const [presentationList, setPresentationList] = useState([]);
-  const getPresentationList = useCallback(async () => {
-    try {
-      const res = await api.get("/presentations");
-      console.log("presentation list response:", res);
-      setPresentationList(
-        res.data.map((presentation) => ({
-          id: presentation.id,
-          title: presentation.title,
-        }))
-      );
-      // console.log("presentation list response:", res);
-    } catch (err) {
-      console.log("🩸presentation list error:", err);
-    }
-  }, []);
-  useEffect(() => {
-    getPresentationList();
-  }, [getPresentationList]);
-
-  const [speechList, setSpeechList] = useState([]);
-  const getSpeechList = useCallback(async () => {
-    try {
-      const res = await api.get(
-        `/presentations/${selectedPresentation}/speeches`,
-        {
-          params: { "presentation-id": selectedPresentation },
-        }
-      );
-      console.log("speech list response:", res);
-      setSpeechList(res.data.map((speech) => speech.id));
-    } catch (err) {
-      console.log("🩸speech list error:", err);
-    }
-  }, [selectedPresentation]);
-  useEffect(() => {
-    getSpeechList();
-  }, [getSpeechList]);
+  // dummy data
+  const presentationList = [
+    { id: 1, title: "(주)쿠키 면접 연습" },
+    { id: 2, title: "소프트웨어 프로그래밍 팀 프로젝트 발표" },
+    { id: 3, title: "산업보안관리 발표" },
+  ];
+  const speechList = [
+    { id: 1, title: "Speech 1" },
+    { id: 2, title: "Speech 2" },
+    { id: 3, title: "Speech 3" },
+  ];
 
   // 코칭 의뢰 신청
   const requestCoaching = useCallback(async () => {
-    try {
-      const res = await api.post("/coaching-request", {
-        speechId: selectedSpeech,
-        coachUuid: coachUuid,
-        userMessage: "",
-      });
-      console.log("request coaching response:", res);
-      alert("코칭 의뢰가 완료되었습니다.");
-    } catch (err) {
-      console.log("🩸request coaching error:", err);
-    }
-  }, [selectedSpeech, coachUuid]);
+    alert("코칭 의뢰가 완료되었습니다.");
+    handleClose();
+  }, []);
 
   return (
     <>
@@ -170,10 +133,10 @@ const CoachingModal = ({ coachUuid }) => {
                     >
                       {speechList.map((s, i) => (
                         <StyledMenuItem
-                          value={s === undefined ? "" : s}
-                          key={s}
+                          value={s === undefined ? "" : s.id}
+                          key={s.id}
                         >
-                          Speech {i + 1}
+                          Speech {s.id}
                         </StyledMenuItem>
                       ))}
                     </StyledSelect>

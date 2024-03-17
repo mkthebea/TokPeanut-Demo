@@ -5,7 +5,6 @@ import { Box, IconButton, Button, Grid } from "@mui/material";
 import Nav from "../../component/layout/Nav";
 import theme from "../../style/theme";
 import CoachingModal from "../../component/modal/CoachingModal";
-import api from "../../api";
 import { useLocation } from "react-router-dom";
 import qs from "qs";
 
@@ -27,28 +26,17 @@ const Portfolio = () => {
   });
   const coachUuid = query.uuid;
 
-  const [portfolio, setPortfolio] = useState({
-    acceptCount: null,
-    introduce: "",
-    nickname: "",
-    shortIntroduce: "",
-    speciality: "",
-    username: "",
-    uuid: "",
-    youtubeUrl: "",
-  });
-  const getPortfolio = useCallback(async () => {
-    try {
-      const res = await api.get(`/coach-profile/${coachUuid}`);
-      setPortfolio(res.data);
-      console.log("portfolio res:", res);
-    } catch (err) {
-      console.log(err);
-    }
-  }, [setPortfolio, coachUuid]);
-  useEffect(() => {
-    getPortfolio();
-  }, [getPortfolio]);
+  // dummy data
+  const portfolio = {
+    acceptCount: 2,
+    introduce:
+      "안녕하세요. 저는 코치입니다. 발표 분야에 대해 도와드릴 수 있습니다.",
+    nickname: "GingerBrave",
+    shortIntroduce: "안녕하세요. 저는 코치입니다.",
+    speciality: "발표",
+    uuid: "1",
+    youtubeUrl: "https://www.youtube.com/embed/UPx_FNT8vU0?si=A0NaL_kBF4FGLEhn",
+  };
 
   return (
     <>
@@ -84,16 +72,12 @@ const Portfolio = () => {
               </div>
             </div>
             <div className="portfolio-content">
-              {/* <video></video> */}
               <div className="video">
-                {/* <img src="/img/video.png" width="100%" height="100%" alt="" /> */}
                 <iframe
                   width="100%"
                   height="100%"
                   src="https://www.youtube.com/embed/UPx_FNT8vU0?si=A0NaL_kBF4FGLEhn"
-                  // src={portfolio.youtubeUrl}
                   title="YouTube video player"
-                  // frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 ></iframe>
@@ -183,7 +167,7 @@ const Content = styled(Box)`
       justify-content: space-between;
       width: 100%;
       & > div {
-        width: 49%;
+        width: 100%;
       }
     }
   }

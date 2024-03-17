@@ -8,7 +8,9 @@ import LandingPage from "./pages/LandingPage";
 
 import PresentationList from "./pages/presentation/PresentationList/PresentationList";
 import Summary from "./pages/presentation/Summary/Summary";
-import Speech from "./pages/presentation/Speech/Speech";
+// import Speech from "./pages/presentation/Speech/Speech";
+import SpeechTest from "./pages/presentation/Speech/SpeechTest";
+
 import Practice from "./pages/presentation/Practice/Practice";
 import NewPresentation from "./pages/presentation/NewPresentation/NewPresentation";
 
@@ -32,6 +34,7 @@ import "dayjs/locale/ko";
 import * as relativeTime from "dayjs/plugin/relativeTime";
 
 import { AuthProvider } from "./AuthContext";
+import { ScriptProvider } from "./pages/presentation/Speech/ScriptContext";
 
 dayjs.locale("ko");
 dayjs.extend(relativeTime);
@@ -40,12 +43,21 @@ function App() {
     <AuthProvider>
       <GlobalStyle />
       <Router>
-        {/* <Topbar /> */}
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/presentation" element={<PresentationList />} />
           <Route path="/presentation/summary" element={<Summary />} />
-          <Route path="/presentation/speech" element={<Speech />} />
+
+          {/* <Route path="/presentation/speech" element={<Speech />} /> */}
+          <Route
+            path="/presentation/speech"
+            element={
+              <ScriptProvider>
+                <SpeechTest />
+              </ScriptProvider>
+            }
+          />
+
           <Route
             path="/presentation/practice"
             element={<Practice isNew={false} />}

@@ -1,10 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import qs from "qs";
-import axios from "axios";
-import dayjs from "dayjs";
-import api from "../../../api";
-
 import styled from "@emotion/styled";
 import { createTheme, Divider, Icon, ThemeProvider } from "@mui/material";
 import { Box, IconButton, Button } from "@mui/material";
@@ -26,69 +20,42 @@ const Pagination = () => {
     },
   });
 
-  const location = useLocation();
-  const query = qs.parse(location.search, {
-    ignoreQueryPrefix: true,
-  });
-  const presentation_id = query.presentation_id;
-  const speech_id = query.speech_id;
+  // dummy data
+  const [speechList, setSpeechList] = useState([
+    {
+      id: 1,
+      createdDate: "2024-02-27",
+      recordDone: true,
+      bookmarked: true,
+    },
+    {
+      id: 2,
+      createdDate: "2024-03-11",
+      recordDone: true,
+      bookmarked: false,
+    },
+    {
+      id: 3,
+      createdDate: "2024-03-14",
+      recordDone: false,
+      bookmarked: true,
+    },
+  ]);
 
-  const patchBookmark = async (e, selectedSpeechId) => {
-    e.stopPropagation();
-    const isBookmarked = e.target.checked;
-    try {
-      const res = await api.patch(
-        `/presentations/${presentation_id}/speeches/${selectedSpeechId}`,
-        {
-          params: {
-            "presentation-id": presentation_id,
-            "speech-id": selectedSpeechId,
-          },
-          bookmarked: isBookmarked,
-        }
+  const patchBookmark = useCallback(
+    (e, selectedSpeechId) => {
+      e.stopPropagation();
+      const isBookmarked = e.target.checked;
+      setSpeechList(
+        speechList.map((s) =>
+          s.id === selectedSpeechId ? { ...s, bookmarked: isBookmarked } : s
+        )
       );
-      console.log("patch bookmark response:", res);
-      getSpeechList();
-    } catch (err) {
-      console.log("patch bookmark error:", err);
-    }
-  };
+    },
+    [speechList]
+  );
 
-  const [speechList, setSpeechList] = useState([]);
-  const getSpeechList = useCallback(async () => {
-    try {
-      const res = await api.get(`/presentations/${presentation_id}/speeches`);
-      console.log("speech list response:", res);
-      res.data.forEach((speech) => {
-        const date = dayjs(speech.createdDate);
-        // speech.createdDate = dayjs(speech.createdDate).diff(nowDate, "hour");
-        speech.createdDate = dayjs().to(date);
-      });
-      setSpeechList(res.data);
-    } catch (err) {
-      console.log("speech list error:", err);
-    }
-  }, [presentation_id]);
-
-  useEffect(() => {
-    getSpeechList();
-  }, [getSpeechList]);
-
-  const navigate = useNavigate();
-
-  const navigateToSpeech = (speech_id, index) => {
-    // 녹음이 완료되지 않은 경우 연습 화면으로 이동
-    if (!speechList[index].recordDone) {
-      navigate(
-        `/presentation/practice?presentation_id=${presentation_id}&speech_id=${speech_id}`
-      );
-    } else {
-      navigate(
-        `/presentation/speech?presentation_id=${presentation_id}&speech_id=${speech_id}`
-      );
-      window.location.reload();
-    }
-  };
+  const [selectedSpeech, setSelectedSpeech] = useState(1);
 
   return (
     <>
@@ -97,10 +64,10 @@ const Pagination = () => {
           <ul>
             {speechList.map((speech, i) => (
               <li
-                className={speech.id === speech_id * 1 ? "select" : ""}
+                className={speech.id === selectedSpeech ? "select" : ""}
                 key={speech.id}
               >
-                <Button onClick={() => navigateToSpeech(speech.id, i)}>
+                <Button onClick={() => setSelectedSpeech(speech.id)}>
                   <div>Sp {i + 1}</div>
                   <div className="sub">{speech.createdDate}</div>
                 </Button>

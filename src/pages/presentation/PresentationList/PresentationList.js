@@ -1,9 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import dayjs from "dayjs";
 import styled from "@emotion/styled";
-import { createGlobalStyle } from "styled-components";
 import { createTheme, Divider, Icon, ThemeProvider } from "@mui/material";
 import {
   Box,
@@ -16,11 +13,10 @@ import {
 import Nav from "../../../component/layout/Nav";
 
 import theme from "../../../style/theme";
-import FilledBtn from "../../../component/button/FilledBtn";
 import SolidBtn from "../../../component/button/SolidBtn";
 
 import FolderDeleteIcon from "@mui/icons-material/FolderDelete";
-import api from "../../../api";
+
 const PresentationList = () => {
   const theme = createTheme({
     typography: {
@@ -32,56 +28,53 @@ const PresentationList = () => {
       },
     },
   });
-  // 임시 계정
-  const uuid = "b646969a-c87d-482f-82c5-6ec89c917412";
   const [presentationList, setPresentationList] = useState([]);
-  const getPresentationList = async () => {
-    try {
-      const res = await api.get("/presentations", {
-        params: { "account-uuid": uuid },
-      });
-      res.data.forEach((presentation) => {
-        const date = dayjs(presentation.createdDate);
-        presentation.createdDate = dayjs().to(date);
-      });
-      setPresentationList(res.data);
-      // console.log("presentation list response:", res);
-    } catch (err) {
-      console.log("🩸presentation list error:", err);
-    }
-  };
 
+  // dummy data
   useEffect(() => {
-    getPresentationList();
+    setPresentationList([
+      {
+        id: 1,
+        title: "(주)쿠키 면접 연습",
+        outline: "차분하게 기술적인 내용을 설명하는 연습",
+        createdDate: "2024-03-14",
+      },
+      {
+        id: 2,
+        title: "소프트웨어 프로그래밍 팀 프로젝트 발표",
+        outline: "팀 프로젝트 발표",
+        createdDate: "2023-09-11",
+      },
+      {
+        id: 3,
+        title: "산업보안관리 발표",
+        outline: "논문 연구에 대한 발표",
+        createdDate: "202-10-10",
+      },
+    ]);
   }, []);
 
   const navigate = useNavigate();
 
-  const navigateToPresentation = (presentation_id) => {
-    if (editMode) return;
-    navigate(`/presentation/summary?presentation_id=${presentation_id}`);
-  };
-
   const [editMode, setEditMode] = useState(false);
-  const handleDelete = async (e, presentation_id) => {
-    e.stopPropagation();
-    if (window.confirm("해당 프레젠테이션을 삭제하시겠습니까?")) {
-      try {
-        const res = await api.delete(`/presentations/${presentation_id}`, {
-          params: {
-            "presentation-id": presentation_id,
-          },
-        });
-        // console.log("delete presentation response:", res);
-        alert("삭제되었습니다.");
-        getPresentationList();
-      } catch (err) {
-        console.log("🩸delete presentation error:", err);
+  const navigateToPresentation = useCallback(() => {
+    if (editMode) return;
+    navigate(`/presentation/summary`);
+  }, [editMode, navigate]);
+
+  const handleDelete = useCallback(
+    (e, presentation_id) => {
+      e.stopPropagation();
+      if (window.confirm("해당 프레젠테이션을 삭제하시겠습니까?")) {
+        setPresentationList(
+          presentationList.filter((p) => p.id !== presentation_id)
+        );
+      } else {
+        alert("삭제가 취소되었습니다.");
       }
-    } else {
-      alert("삭제가 취소되었습니다.");
-    }
-  };
+    },
+    [presentationList]
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -116,37 +109,35 @@ const PresentationList = () => {
             </div>
           </Guide>
           <ul className="list-wrap">
-            {presentationList
-              .map((p) => (
-                <li key={p.id}>
-                  <ListBox
-                    variant="outlined"
-                    onClick={() => navigateToPresentation(p.id)}
-                    editmode={editMode ? 1 : 0}
-                  >
-                    <div className="name">
-                      <h3>{p.outline}</h3>
-                      <h2>{p.title}</h2>
-                    </div>
-                    <span>
-                      {p.createdDate}
-                      <Grow
-                        in={editMode}
-                        {...(editMode ? { timeout: 700 } : {})}
-                        className="delete"
-                      >
-                        {
-                          <FolderDeleteIcon
-                            onClick={(e) => handleDelete(e, p.id)}
-                            className="delete"
-                          />
-                        }
-                      </Grow>
-                    </span>
-                  </ListBox>
-                </li>
-              ))
-              .reverse()}
+            {presentationList.map((p) => (
+              <li key={p.id}>
+                <ListBox
+                  variant="outlined"
+                  onClick={() => navigateToPresentation()}
+                  editmode={editMode ? 1 : 0}
+                >
+                  <div className="name">
+                    <h3>{p.outline}</h3>
+                    <h2>{p.title}</h2>
+                  </div>
+                  <span>
+                    {p.createdDate}
+                    <Grow
+                      in={editMode}
+                      {...(editMode ? { timeout: 700 } : {})}
+                      className="delete"
+                    >
+                      {
+                        <FolderDeleteIcon
+                          onClick={(e) => handleDelete(e, p.id)}
+                          className="delete"
+                        />
+                      }
+                    </Grow>
+                  </span>
+                </ListBox>
+              </li>
+            ))}
           </ul>
         </ListWrap>
       </Container>

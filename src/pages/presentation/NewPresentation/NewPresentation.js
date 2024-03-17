@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 import styled from "@emotion/styled";
 import { createTheme, ThemeProvider } from "@mui/material";
@@ -10,7 +9,6 @@ import Nav from "../../../component/layout/Nav";
 import theme from "../../../style/theme";
 import CircleIcon from "@mui/icons-material/Circle";
 import TextField from "@mui/material/TextField";
-import api from "../../../api";
 
 const NewPresentation = () => {
   const theme = createTheme({
@@ -23,56 +21,61 @@ const NewPresentation = () => {
       },
     },
   });
-  const [title, setTitle] = useState(""); // 제목
-  const [outline, setOutline] = useState(""); // 개요
-  const [checkpoint, setCheckpoint] = useState(""); // 잘 하고싶은 부분
   const navigate = useNavigate();
 
-  const onChangeTitle = (e) => {
-    setTitle(e.target.value);
-  };
-  const onChangeOutline = (e) => {
-    setOutline(e.target.value);
-  };
-  const onChangeCheckpoint = (e) => {
-    setCheckpoint(e.target.value);
-  };
+  // const [title, setTitle] = useState(""); // 제목
+  // const [outline, setOutline] = useState(""); // 개요
+  // const [checkpoint, setCheckpoint] = useState(""); // 잘 하고싶은 부분
 
-  const createPresentation = async (e) => {
-    e.preventDefault();
-    let res = null;
-    try {
-      res = await api.post("/presentations", {
-        accountUuid: "b646969a-c87d-482f-82c5-6ec89c917412",
-        presentation: {
-          title: title,
-          outline: outline,
-          checkpoint: checkpoint,
-        },
-      });
-      console.log("new presentation response:", res);
-    } catch (err) {
-      console.log("new presentation error: ", err);
-    }
-    // 새로 생성된 presentation의 id로 새 스피치 생성
-    createSpeech(res.data.id);
-  };
+  // const onChangeTitle = (e) => {
+  //   setTitle(e.target.value);
+  // };
+  // const onChangeOutline = (e) => {
+  //   setOutline(e.target.value);
+  // };
+  // const onChangeCheckpoint = (e) => {
+  //   setCheckpoint(e.target.value);
+  // };
 
-  const createSpeech = async (presentation_id) => {
-    let res = null;
-    try {
-      res = await api.post(`/presentations/${presentation_id}/speeches`, {
-        params: { "presentation-id": presentation_id },
-      });
-      console.log("new speech response:", res);
-    } catch (err) {
-      console.log("new speech error: ", err);
-    }
-    // 새로 생성된 speech의 id로 practice 페이지로 이동
-    navigate(
-      `/presentation/new/practice?presentation_id=${presentation_id}&speech_id=${res.data.id}`
-    );
-  };
+  const createPresentation = useCallback(() => {
+    navigate("/presentation/new/practice");
+  }, [navigate]);
+
+  // const createPresentation = async (e) => {
+  //   e.preventDefault();
+  //   let res = null;
+  //   try {
+  //     res = await api.post("/presentations", {
+  //       accountUuid: "b646969a-c87d-482f-82c5-6ec89c917412",
+  //       presentation: {
+  //         title: title,
+  //         outline: outline,
+  //         checkpoint: checkpoint,
+  //       },
+  //     });
+  //     console.log("new presentation response:", res);
+  //   } catch (err) {
+  //     console.log("new presentation error: ", err);
+  //   }
+  //   // 새로 생성된 presentation의 id로 새 스피치 생성
+  //   createSpeech(res.data.id);
+  // };
+
+  // const createSpeech = async (presentation_id) => {
+  //   let res = null;
+  //   try {
+  //     res = await api.post(`/presentations/${presentation_id}/speeches`, {
+  //       params: { "presentation-id": presentation_id },
+  //     });
+  //     console.log("new speech response:", res);
+  //   } catch (err) {
+  //     console.log("new speech error: ", err);
+  //   }
+  //   // 새로 생성된 speech의 id로 practice 페이지로 이동
+  //   navigate(
+  //     `/presentation/new/practice?presentation_id=${presentation_id}&speech_id=${res.data.id}`
+  //   );
+  // };
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -94,7 +97,7 @@ const NewPresentation = () => {
                     id="outlined-basic"
                     variant="outlined"
                     placeholder="제목을 입력하세요."
-                    onChange={onChangeTitle}
+                    // onChange={onChangeTitle}
                     maxLength={20}
                     required
                     fullWidth
@@ -109,10 +112,9 @@ const NewPresentation = () => {
                     id="outlined-basic"
                     variant="outlined"
                     placeholder="스피치 개요를 작성하세요. EX) 암호학에 관한 발표입니다."
-                    onChange={onChangeOutline}
+                    // onChange={onChangeOutline}
                     fullWidth
                     multiline
-                    // maxRows={4}
                     maxLength={8000}
                   />
                 </li>
@@ -125,7 +127,7 @@ const NewPresentation = () => {
                     id="outlined-basic"
                     variant="outlined"
                     placeholder="잘 하고 싶은 부분을 작성하세요. EX) 전문적인 분위기로 발표하고 싶어요"
-                    onChange={onChangeCheckpoint}
+                    // onChange={onChangeCheckpoint}
                     fullWidth
                     multiline
                     maxRows={4}

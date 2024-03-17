@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import styled from "@emotion/styled";
 import { createTheme, Divider, Icon, ThemeProvider } from "@mui/material";
@@ -6,7 +6,6 @@ import { Box, IconButton, Button } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import theme from "../../style/theme";
 import AuthContext from "../../AuthContext";
-import api from "../../api";
 
 import MenuIcon from "@mui/icons-material/Menu";
 
@@ -30,24 +29,19 @@ const Nav = () => {
 
   const [open, setOpen] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     setOpen(!open);
-  };
+  }, [open]);
 
-  const logout = async () => {
+  const navigate = useNavigate();
+  const logout = useCallback(() => {
     const logoutChk = window.confirm("로그아웃 하시겠습니까?");
     if (!logoutChk) return;
-    try {
-      const res = await api.patch("/accounts/logout");
-      // console.log("logout res: ", res);
-      setAuthInfo({ nickname: "", type: "" });
-      alert("로그아웃 되었습니다.");
-      navigate("/login");
-    } catch (err) {
-      console.log("logout err: ", err);
-    }
-  };
-  const navigate = useNavigate();
+    setAuthInfo({ nickname: "", type: "" });
+    alert("로그아웃 되었습니다.");
+    navigate("/login");
+  }, [setAuthInfo, navigate]);
+
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -112,12 +106,14 @@ const Nav = () => {
                     )}
                   </li>
                   <li>
-                    <RBtn
-                      variant="outlined"
-                      onClick={() => navigate("/user/mypage")}
-                    >
-                      마이페이지
-                    </RBtn>
+                    {authInfo.type === "coach" && (
+                      <RBtn
+                        variant="outlined"
+                        onClick={() => navigate("/user/mypage")}
+                      >
+                        마이페이지
+                      </RBtn>
+                    )}
                   </li>
                 </ul>
               </div>

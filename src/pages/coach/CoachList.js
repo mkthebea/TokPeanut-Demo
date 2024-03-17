@@ -3,7 +3,6 @@ import styled from "@emotion/styled";
 import { createTheme, Divider, Icon, ThemeProvider } from "@mui/material";
 import { Box, IconButton, Button, Grid } from "@mui/material";
 import Nav from "../../component/layout/Nav";
-import api from "../../api";
 
 import theme from "../../style/theme";
 import TextField from "@mui/material/TextField";
@@ -39,20 +38,36 @@ const CoachList = () => {
     setSelect(event.target.value);
   };
 
-  const [coachList, setCoachList] = useState([]);
-  const getCoachList = useCallback(async () => {
-    try {
-      const res = await api.get("/coach-profile");
-      // console.log(res);
-      setCoachList(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  }, [setCoachList]);
-
-  useEffect(() => {
-    getCoachList();
-  }, [getCoachList]);
+  // dummy data
+  const coachList = [
+    {
+      nickname: "Alice",
+      career: "3년",
+      language: "면접",
+      price: "30,000",
+      img: "/img/coach1.png",
+      uuid: 1,
+      shortIntroduce: "안녕하세요. Alice입니다.",
+    },
+    {
+      nickname: "Bob",
+      career: "2년",
+      language: "발표",
+      price: "30,000",
+      img: "/img/coach2.png",
+      uuid: 2,
+      shortIntroduce: "발표 준비에 강한 Bob입니다.",
+    },
+    {
+      nickname: "Carol",
+      career: "5년",
+      language: "학술 발표",
+      price: "30,000",
+      img: "/img/coach3.png",
+      uuid: 3,
+      shortIntroduce: "안녕하세요. Carol입니다.",
+    },
+  ];
 
   return (
     <ThemeProvider theme={theme}>

@@ -6,7 +6,6 @@ import { Box, IconButton, Button, Grid } from "@mui/material";
 import Nav from "../../component/layout/Nav";
 import theme from "../../style/theme";
 import RequestCardCoach from "../../component/card/RequestCardCoach";
-import api from "../../api";
 
 const Item = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -24,19 +23,29 @@ const CoachMatching = () => {
     },
   });
 
-  const [requestList, setRequestList] = useState([]);
-  const getRequestList = useCallback(async () => {
-    try {
-      const res = await api.get("/coaching-request");
-      console.log("request list res:", res);
-      setRequestList(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  }, [setRequestList]);
-  useEffect(() => {
-    getRequestList();
-  }, [getRequestList]);
+  // dummy data
+  const requestList = [
+    {
+      id: 1,
+      userNickname: "Alice",
+      status: "REQUESTED",
+    },
+    {
+      id: 2,
+      userNickname: "Bob",
+      status: "ACCEPTED",
+    },
+    {
+      id: 3,
+      userNickname: "Carol",
+      status: "DENIED",
+    },
+    {
+      id: 4,
+      userNickname: "David",
+      status: "DONE",
+    },
+  ];
 
   return (
     <>
@@ -55,7 +64,6 @@ const CoachMatching = () => {
                       userName={request.userNickname}
                       type={request.status}
                       id={request.id}
-                      setter={getRequestList}
                     />
                   </Item>
                 </Card>

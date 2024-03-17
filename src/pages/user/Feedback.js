@@ -6,11 +6,8 @@ import React, {
   useReducer,
   useContext,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import WaveSurfer from "wavesurfer.js";
-import qs from "qs";
-import axios from "axios";
-import api from "../../api";
 import AuthContext from "../../AuthContext";
 
 import { keyframes } from "@emotion/react";
@@ -23,18 +20,22 @@ import {
   IconButton,
   Button,
 } from "@mui/material";
-import FilledBtn from "../../component/button/FilledBtn";
+
 import Tooltip from "@mui/material/Tooltip";
 
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import FilledBtn from "../../component/button/FilledBtn";
 
 import Nav from "../../component/layout/Nav";
 
 import theme from "../../style/theme";
 
 import peanut_run from "../../image/peanut_run.png";
+
+import stt from "../stt2.json";
+import mp3 from "../mp3.mp3";
 
 // custom hook (timer)
 const useCounter = (initialValue, ms) => {
@@ -48,7 +49,7 @@ const useCounter = (initialValue, ms) => {
     intervalRef.current = setInterval(() => {
       setCount((c) => c + 1);
     }, ms);
-  }, []);
+  }, [ms]);
 
   const stop = useCallback(() => {
     if (intervalRef.current === null) {
@@ -68,7 +69,7 @@ const useCounter = (initialValue, ms) => {
 const simpleSymbolsReducer = (state, action) => {
   switch (action.type) {
     case "INIT":
-      // console.log("init simple symbols: ", action.payload);
+      console.log("init simple symbols: ", action.payload);
       return action.payload;
     case "ADD":
       console.log("add simple symbol: ", action.symbol, action.idx, state);
@@ -126,94 +127,12 @@ const Feedback = () => {
     },
   });
   const { authInfo } = useContext(AuthContext);
-  const location = useLocation();
-  const query = qs.parse(location.search, {
-    ignoreQueryPrefix: true,
-  });
-  const navigate = useNavigate();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isDone, setIsDone] = useState(false);
 
-  const matching_id = query.matching_id;
+  // 0.001초 단위 타이머
+  const { count, start, stop, reset, setCount } = useCounter(0, 100);
 
-  const [audio, setAudio] = useState(null);
-
-  const initUserSymbols = useCallback((userSymbol) => {
-    const initialSymbols = JSON.parse(userSymbol);
-    if (!initialSymbols) {
-      dispatch({
-        type: "INIT",
-        payload: Array(100).fill([]),
-      });
-    } else {
-      dispatch({
-        type: "INIT",
-        payload: initialSymbols.simpleSymbols,
-      });
-      setHighlighted(initialSymbols.highlight);
-      setEdited(initialSymbols.edit);
-    }
-  }, []);
-
-  // audio 가져와서 변환
-  const getAudio = useCallback(async (fullAudioUrl) => {
-    try {
-      const res = await axios.get(fullAudioUrl, {
-        responseType: "blob",
-      });
-      // console.log("audio response:", res);
-      const blob = new Blob([res.data]);
-      setAudio(blob);
-    } catch (err) {
-      console.log("🩸audio error:", err);
-    }
-  }, []);
-
-  const [text, setText] = useState([]);
-  const [started, setStarted] = useState([]);
-  const [ended, setEnded] = useState([]);
-  const [duration, setDuration] = useState([]);
-
-  // 단순 기호 관리
-  const [simpleSymbols, dispatch] = useReducer(
-    simpleSymbolsReducer, // reducer
-    [[]] //initial state
-  );
-  const [highlighted, setHighlighted] = useState([]);
-  const [edited, setEdited] = useState([]);
-
-  const wordRef = useRef([]);
-
-  const initSTT = useCallback((stt) => {
-    setText(stt.segments.flatMap((seg) => seg.words.map((w) => w[2])));
-    setStarted(
-      stt.segments.flatMap((seg) => seg.words.map((w) => w[0] * 0.01))
-    );
-    setEnded(stt.segments.flatMap((seg) => seg.words.map((w) => w[1] * 0.01)));
-    setDuration(
-      stt.segments.flatMap((seg) => seg.words.map((w) => (w[1] - w[0]) * 0.001))
-    );
-  }, []);
-
-  const getRequestData = useCallback(async () => {
-    try {
-      const res = await api.get(`/coaching-request/${matching_id}`);
-      console.log("request data res:", res);
-      await getAudio(res.data.fullAudioUrl);
-      await initUserSymbols(res.data.jsonUserSymbol);
-      await initSTT(JSON.parse(JSON.parse(res.data.sttResult)));
-      setIsLoaded(true);
-    } catch (err) {
-      console.log(err);
-    }
-  }, [matching_id, getAudio, initUserSymbols, initSTT]);
-
-  useEffect(() => {
-    getRequestData();
-  }, [getRequestData]);
-
-  // tool bar
-  const [cursor, setCursor] = useState("BASIC");
-
+  // images and descriptions
   const symbolIcons = {
     BASIC: "/img/script/toolbar/basic-cursor.svg",
     HIGHLIGHT: "/img/script/toolbar/color/pencil1.svg",
@@ -226,218 +145,260 @@ const Feedback = () => {
     SLASH: "/img/script/toolbar/slash.svg",
     ERASER: "/img/script/toolbar/eraser.svg",
   };
-
   const symbolDesc = {
     BASIC:
       "재생 바를 조절하는 기본 커서입니다. \n단어를 클릭해 원하는 위치로 이동하세요.",
     HIGHLIGHT:
-      "강조를 위한 노란색 형광펜입니다. \n원하는 위치에 드래그 하세요.",
+      "강조를 위한 노란색 형광펜입니다. \n피드백할 위치에 드래그 하세요.",
     FASTER:
-      "[빠르게] 표시를 위한 분홍색 형광펜입니다. \n원하는 위치에 드래그 하세요.",
+      "[빠르게] 표시를 위한 분홍색 형광펜입니다. \n피드백할 위치에 드래그 하세요.",
     SLOWER:
-      "[느리게] 표시를 위한 초록색 형광펜입니다. \n원하는 위치에 드래그 하세요.",
-    EDIT: "단어를 수정하는 연필입니다. \n수정하고 싶은 단어를 클릭하세요.",
-    ENTER: "줄바꿈을 위한 아이콘입니다. \n원하는 위치를 클릭해 추가하세요.",
-    PAUSE: "일시정지를 위한 아이콘입니다. \n원하는 위치를 클릭해 추가하세요.",
+      "[느리게] 표시를 위한 초록색 형광펜입니다. \n피드백할 위치에 드래그 하세요.",
+    EDIT: "단어를 수정하는 연필입니다. \n피드백할 단어를 클릭하세요.",
+    ENTER: "줄바꿈을 위한 아이콘입니다. \n피드백할 위치를 클릭해 추가하세요.",
+    PAUSE: "일시정지를 위한 아이콘입니다. \n피드백할 위치를 클릭해 추가하세요.",
     MOUSE:
-      "ppt 애니메이션 등 마우스 클릭 이벤트를 위한 아이콘입니다. \n원하는 위치를 클릭해 추가하세요.",
-    SLASH: "끊어읽기를 위한 아이콘입니다. \n원하는 위치를 클릭해 추가하세요.",
+      "ppt 애니메이션 등 마우스 클릭 이벤트를 위한 아이콘입니다. \n피드백할 위치를 클릭해 추가하세요.",
+    SLASH: "끊어읽기를 위한 아이콘입니다. \n피드백할 위치를 클릭해 추가하세요.",
     ERASER:
       "모든 기호를 지우는 지우개입니다. \n초기화 하고싶은 단어를 클릭하세요.",
   };
 
+  const navigate = useNavigate();
+
+  // STT 데이터 초기화
+  const [text, setText] = useState([]);
+  const [started, setStarted] = useState([]);
+  const [ended, setEnded] = useState([]);
+  const [duration, setDuration] = useState([]);
+  const [scriptLength, setScriptLength] = useState(0);
+  const initSTT = useCallback((stt) => {
+    const words = stt.segments.flatMap((seg) => seg.words.map((w) => w[2]));
+    setText(words);
+    setScriptLength(words.length);
+    setStarted(
+      stt.segments.flatMap((seg) => seg.words.map((w) => w[0] * 0.01))
+    );
+    setEnded(stt.segments.flatMap((seg) => seg.words.map((w) => w[1] * 0.01)));
+    setDuration(
+      stt.segments.flatMap((seg) => seg.words.map((w) => (w[1] - w[0]) * 0.001))
+    );
+  }, []);
+  useEffect(() => {
+    initSTT(stt);
+  }, [initSTT]);
+
+  const [simpleSymbols, dispatch] = useReducer(
+    simpleSymbolsReducer, // reducer
+    [[]] //initial state
+  );
+  const [highlighted, setHighlighted] = useState([]);
+  const [edited, setEdited] = useState([]);
+
+  // init user symbols
+  useEffect(() => {
+    // initUserSymbols();
+    if (scriptLength === 0) return;
+    dispatch({
+      type: "INIT",
+      payload: Array(scriptLength).fill([]),
+    });
+    setHighlighted(Array(scriptLength).fill(""));
+    setEdited(Array(scriptLength).fill(""));
+  }, [scriptLength]);
+
+  useEffect(() => {
+    if (!mp3) return;
+    if (!simpleSymbols) return;
+    if (text.length === 0) return;
+    setIsDone(true);
+  }, [text, simpleSymbols]);
+
+  const wordRef = useRef([]);
+
+  // 편집 기능
+  const [cursor, setCursor] = useState("BASIC");
+  const [dragging, setDragging] = useState(false);
+
   const [waveFormLoaded, setWaveFormLoaded] = useState(false);
   const [waveSurferInstance, setWaveSurferInstance] = useState(null);
 
-  const { count, start, stop, reset, setCount } = useCounter(0, 100); //0.1초 단위 타이머
-  const [dragging, setDragging] = useState(false);
+  const clickWord = useCallback(
+    (e) => {
+      if (!waveFormLoaded) return;
+      const selectedWordIdx = e.currentTarget.id; // 클릭된 단어 인덱스
 
-  const clickWord = (e) => {
-    if (!waveFormLoaded) return;
-    const selectedWordIdx = e.currentTarget.id; // 클릭된 단어 인덱스
+      switch (cursor) {
+        // 기호 표시
+        case "HIGHLIGHT":
+          highlighted[selectedWordIdx] = "rgba(255,255,204)";
+          setHighlighted([...highlighted]);
+          setDragging(true);
+          break;
+        case "FASTER":
+          highlighted[selectedWordIdx] = "rgb(255, 204, 255)";
+          setHighlighted([...highlighted]);
+          setDragging(true);
+          break;
+        case "SLOWER":
+          highlighted[selectedWordIdx] = "rgb(204, 255, 204)";
+          setHighlighted([...highlighted]);
+          setDragging(true);
+          break;
+        case "EDIT":
+          edited[selectedWordIdx] = edited[selectedWordIdx]
+            ? edited[selectedWordIdx]
+            : text[selectedWordIdx]; // 원래 단어로 초기화
+          setEdited([...edited]);
+          break;
+        case "ENTER":
+        case "PAUSE":
+        case "MOUSE":
+        case "SLASH":
+          dispatch({ type: "ADD", symbol: cursor, idx: selectedWordIdx });
+          break;
+        case "ERASER":
+          dispatch({ type: "REMOVE", idx: selectedWordIdx });
+          highlighted[selectedWordIdx] = "";
+          setHighlighted([...highlighted]);
+          edited[selectedWordIdx] = null;
+          setEdited([...edited]);
+          setDragging(true);
+          break;
+        // 재생 바 조절
+        case "BASIC":
+          waveSurferInstance.setCurrentTime(started[selectedWordIdx] * 0.1);
+          setCount(started[selectedWordIdx]);
+          break;
+        default:
+          break;
+      }
+    },
+    [
+      cursor,
+      waveFormLoaded,
+      waveSurferInstance,
+      text,
+      highlighted,
+      edited,
+      setCount,
+      started,
+    ]
+  );
 
-    switch (cursor) {
-      // 기호 표시
-      case "HIGHLIGHT":
-        highlighted[selectedWordIdx] = "rgba(255,255,204)";
-        setHighlighted([...highlighted]);
-        setDragging(true);
-        break;
-      case "FASTER":
-        highlighted[selectedWordIdx] = "rgb(255, 204, 255)";
-        setHighlighted([...highlighted]);
-        setDragging(true);
-        break;
-      case "SLOWER":
-        highlighted[selectedWordIdx] = "rgb(204, 255, 204)";
-        setHighlighted([...highlighted]);
-        setDragging(true);
-        break;
-      case "EDIT":
-        edited[selectedWordIdx] = edited[selectedWordIdx]
-          ? edited[selectedWordIdx]
-          : text[selectedWordIdx]; // 원래 단어로 초기화
-        setEdited([...edited]);
-        break;
-      case "ENTER":
-      case "PAUSE":
-      case "MOUSE":
-      case "SLASH":
-        dispatch({ type: "ADD", symbol: cursor, idx: selectedWordIdx });
-        break;
-      case "ERASER":
-        dispatch({ type: "REMOVE", idx: selectedWordIdx });
-        highlighted[selectedWordIdx] = "";
-        setHighlighted([...highlighted]);
-        edited[selectedWordIdx] = null;
-        setEdited([...edited]);
-        setDragging(true);
-        break;
-      // 재생 바 조절
-      case "BASIC":
-        waveSurferInstance.setCurrentTime(started[selectedWordIdx] * 0.1);
-        setCount(started[selectedWordIdx]);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const onReset = () => {
+  // 파형
+  const onReset = useCallback(() => {
     reset();
     waveSurferInstance.setCurrentTime(0);
     waveSurferInstance.pause();
-  };
+  }, [reset, waveSurferInstance]);
 
-  // 파형
   const wavesurferRef = useRef(null);
   const playButton = useRef(null);
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
-    if (audio) {
-      let wavesurfer = null;
-      const initWaveSurfer = () => {
-        wavesurfer = WaveSurfer.create({
-          container: wavesurferRef.current,
-          audioRate: 1, // 재생 속도 (default 1)
-          barHeight: 1, // 막대 높이 (default 1)
-          barWidth: 2, // 막대 넓이
-          barGap: 5,
-          cursorColor: "#ff4e00",
-          cursorWidth: 2,
-          fillParent: true, // 부모 요소를 가득 채울지, mixPxPerSec 옵션에 따를지
-          height: 64, // 웨이브 폼 전체의 높이
-          hideScrollbar: true, // 가로 스크롤바 표시 여부
-          minPxPerSec: 50, // 오디오 파일의 1초당 렌더링 될 픽셀 수의 최솟값. zoom level
-          normalize: true, // true면 가장 큰 막대의 길이에 비례하여 막대 높이 설정
-          progressColor: "#F86F03", // 커서 왼쪽의 파형 색상
-          responsive: false, // 웨이브 폼이 부모 요소보다 길어서 넘치는 경우 스크롤바 or 줄여서 렌더링
-          waveColor: "#3b3b3b", // 커서 오른쪽의 파형 색상
-          interact: false, // 파형 클릭 불가능
-          splitChannels: false, // 두 줄로 출력
-          autoScroll: true, // 자동 스크롤
-          scrollParent: true,
-        });
-        // wavesurfer.load(mp3);
-        wavesurfer.loadBlob(audio);
-
-        setWaveSurferInstance(wavesurfer);
-        // 플레이/퍼즈 때 버튼 텍스트 변경
-        wavesurfer.on("play", () => {
-          start();
-          setPlaying(true);
-        });
-        wavesurfer.on("pause", () => {
-          stop();
-          setPlaying(false);
-        });
-
-        wavesurfer.on("ready", () => {
-          console.log("waveform ready");
-          setWaveFormLoaded(true);
-          playButton.current.addEventListener("click", () => {
-            wavesurfer.playPause();
-          });
-        });
-      };
-
-      const handleUserGesture = () => {
-        if (!wavesurfer) {
-          initWaveSurfer();
-
-          document.removeEventListener("click", handleUserGesture);
-          console.log("remove click event listener");
-        }
-      };
-      document.addEventListener("click", handleUserGesture);
-      return () => {
-        if (wavesurfer) {
-          wavesurfer.destroy();
-        }
-        document.removeEventListener("click", handleUserGesture);
-      };
-    } else {
+    if (!mp3) {
       console.log("audio not loaded");
+      return;
     }
-  }, [audio]);
+    let wavesurfer = null;
+    const initWaveSurfer = () => {
+      wavesurfer = WaveSurfer.create({
+        container: wavesurferRef.current,
+        audioRate: 1, // 재생 속도 (default 1)
+        barHeight: 1, // 막대 높이 (default 1)
+        barWidth: 2, // 막대 넓이
+        barGap: 5,
+        cursorColor: "#ff4e00",
+        cursorWidth: 2,
+        fillParent: true, // 부모 요소를 가득 채울지, mixPxPerSec 옵션에 따를지
+        height: 64, // 웨이브 폼 전체의 높이
+        hideScrollbar: true, // 가로 스크롤바 표시 여부
+        minPxPerSec: 50, // 오디오 파일의 1초당 렌더링 될 픽셀 수의 최솟값. zoom level
+        normalize: true, // true면 가장 큰 막대의 길이에 비례하여 막대 높이 설정
+        progressColor: "#F86F03", // 커서 왼쪽의 파형 색상
+        responsive: false, // 웨이브 폼이 부모 요소보다 길어서 넘치는 경우 스크롤바 or 줄여서 렌더링
+        waveColor: "#3b3b3b", // 커서 오른쪽의 파형 색상
+        interact: false, // 파형 클릭 불가능
+        splitChannels: false, // 두 줄로 출력
+        autoScroll: true, // 자동 스크롤
+        scrollParent: true,
+      });
+      wavesurfer.load(mp3);
+      // wavesurfer.loadBlob(audio);
+
+      setWaveSurferInstance(wavesurfer);
+      // play/pause event
+      wavesurfer.on("play", () => {
+        start();
+        setPlaying(true);
+      });
+      wavesurfer.on("pause", () => {
+        stop();
+        setPlaying(false);
+      });
+
+      wavesurfer.on("ready", () => {
+        console.log("waveform ready");
+        setWaveFormLoaded(true);
+        playButton.current.addEventListener("click", () => {
+          wavesurfer.playPause();
+        });
+      });
+    };
+
+    const handleUserGesture = () => {
+      if (!wavesurfer) {
+        initWaveSurfer();
+        document.removeEventListener("click", handleUserGesture);
+        console.log("remove click event listener");
+      }
+    };
+    document.addEventListener("click", handleUserGesture);
+    return () => {
+      if (wavesurfer) {
+        wavesurfer.destroy();
+      }
+      document.removeEventListener("click", handleUserGesture);
+    };
+  }, [start, stop]);
 
   const handleBlur = useCallback(
     (e, i) => {
       let updated = [...edited];
       if (e.target.innerText === text[i]) {
         updated[i] = null;
-        // edited[i] = false;
       } else if (e.target.innerText.trim() === "") {
         updated[i] = "-";
       } else {
         updated[i] = e.target.innerText;
       }
       setEdited(updated);
-      // patchUserSymbol();
     },
     [edited, text]
   );
-
-  useEffect(() => {
-    (async (simpleSymbols, highlighted, edited) => {
-      if (!isLoaded) return;
-      try {
-        const symbolObj = {
-          simpleSymbols: simpleSymbols,
-          highlight: highlighted,
-          edit: edited,
-        };
-        await api.put(`/coaching-request/${matching_id}`, {
-          coachMessage: "",
-          jsonUserSymbol: JSON.stringify(symbolObj),
-        });
-        // console.log("patch user symbol response:", res);
-      } catch (err) {
-        console.log("🩸patch user symbol error:", err);
-      }
-    })(simpleSymbols, highlighted, edited);
-  }, [isLoaded, simpleSymbols, highlighted, edited, matching_id]);
 
   const finish = async () => {
     const complete = window.confirm(
       "피드백을 완료하시겠습니까?\n완료한 후에는 수정이 불가능합니다."
     );
     if (!complete) return;
-    try {
-      const res = await api.post(`/coaching-request/${matching_id}/finish`);
-      // console.log("finish response:", res);
-      alert("피드백이 완료되었습니다.");
-      navigate("/user/coachmatching");
-    } catch (err) {
-      console.log("🩸finish error:", err);
-    }
+    alert("피드백이 완료되었습니다.");
+    navigate("/user/coachmatching");
   };
+
+  // const [isArrowHover, setIsArrowHover] = useState(false);
+  // const handleMouseOver = useCallback(() => {
+  //   setIsArrowHover(true);
+  // }, []);
+  // const handleMouseOut = useCallback(() => {
+  //   setIsArrowHover(false);
+  // }, []);
 
   return (
     <div
       onMouseUp={() => {
-        // 드래그 중 영역을 벗어나서 마우스를 떼도 드래그 중지
         setDragging(false);
       }}
     >
@@ -446,7 +407,7 @@ const Feedback = () => {
         <Nav />
         <Container cursor={symbolIcons[cursor]}>
           {authInfo.type === "coach" &&
-            (isLoaded ? (
+            (isDone ? (
               <Activate>
                 <ToolBarWrap cursor={symbolIcons[cursor]}>
                   <ul className="activate">
@@ -495,9 +456,9 @@ const Feedback = () => {
               </Disabled>
             ))}
 
-          <Script props={{ user: authInfo.type === "user" }}>
+          <Script props={{ user: authInfo.type !== "coach" }}>
             <Screen>
-              {isLoaded ? (
+              {isDone ? (
                 <TextArea>
                   <p>
                     {text.map((word, i) => (
@@ -527,6 +488,7 @@ const Feedback = () => {
                                   : "not played"
                               }
                               $duration={duration[i]}
+                              // onClick={clickWord}
                               onMouseDown={clickWord}
                               onMouseOver={(e) => {
                                 if (dragging) {
@@ -586,42 +548,53 @@ const Feedback = () => {
                 </TextArea>
               ) : (
                 <>
-                  <div className="logo-box"></div>
-                  <h1>로딩중 . . .</h1>
+                  <div className="logo-box" />
+                  <h1>로딩중...</h1>
                 </>
               )}
             </Screen>
             <WaveContainer>
-              {isLoaded ? (
+              {isDone ? (
                 waveFormLoaded ? null : (
-                  <div className="text">클릭하여 편집을 시작하세요</div>
+                  <div className="text">클릭하여 시작하세요</div>
                 )
               ) : (
                 <div className="text">waiting...</div>
               )}
               <WaveWrapper
                 ref={wavesurferRef}
-                $ready={isLoaded && waveFormLoaded ? 1 : 0}
+                $ready={isDone && waveFormLoaded ? 1 : 0}
               />
             </WaveContainer>
             <PC>
               <ScriptBarWrap>
-                {isLoaded ? (
-                  <div className="btn-wrap activate">
-                    <div>
-                      <PlayBtn variant="contained" ref={playButton}>
-                        {playing ? <PauseIcon /> : <PlayArrowIcon />}
-                      </PlayBtn>
-                      <PlayBtn variant="contained" onClick={onReset}>
-                        <RestartAltIcon />
-                      </PlayBtn>
+                {isDone ? (
+                  <>
+                    <div className="btn-wrap activate">
+                      <div>
+                        <PlayBtn variant="contained" ref={playButton}>
+                          {playing ? <PauseIcon /> : <PlayArrowIcon />}
+                        </PlayBtn>
+                        <PlayBtn variant="contained" onClick={onReset}>
+                          <RestartAltIcon />
+                        </PlayBtn>
+                      </div>
                     </div>
                     {authInfo.type === "coach" && (
-                      <div className="done-btn">
-                        <FilledBtn text={"피드백 완료"} onClick={finish} />
-                      </div>
+                      <>
+                        <FinishToolTip>피드백 완료</FinishToolTip>
+                        <FinishArrow
+                          onClick={finish}
+                          // onMouseOver={handleMouseOver}
+                          // onMouseOut={handleMouseOut}
+                        >
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </FinishArrow>
+                      </>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <div className="btn-wrap">
                     <div>
@@ -634,7 +607,7 @@ const Feedback = () => {
                     </div>
                     {authInfo.type === "coach" && (
                       <div className="done-btn">
-                        <FilledBtn text={"피드백 완료"} disabled />
+                        {/* <FilledBtn text={"피드백 완료"} disabled /> */}
                       </div>
                     )}
                   </div>
@@ -663,10 +636,68 @@ const GlobalStyle = createGlobalStyle`
       color: inherit;
     }
 `;
+
+const FinishArrow = styled.div`
+  @keyframes AnimateArrow {
+    0% {
+      opacity: 0;
+      transform: rotate(45deg) translate(-20px, -20px);
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: rotate(45deg) translate(20px, 20px);
+    }
+  }
+  position: absolute;
+  top: 50vh;
+  right: 6vw;
+  /* transform: translate(50%, 50%); */
+  transform: rotate(-90deg);
+  cursor: pointer;
+  span {
+    display: block;
+    width: 1.5vw;
+    height: 1.5vw;
+    border-bottom: 4px solid #f86f03;
+    border-right: 4px solid #f86f03;
+    /* transform: rotate(45deg); */
+    margin: -10px;
+    animation: AnimateArrow 2s infinite;
+  }
+
+  span:nth-child(2) {
+    animation-delay: -0.2s;
+  }
+
+  span:nth-child(3) {
+    animation-delay: -0.4s;
+  }
+`;
+
+const FinishToolTip = styled.span`
+  /* position: absolute; */
+  visibility: hidden;
+  width: 12rem;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  /* bottom: 100%;
+  left: 50%; */
+  font-size: 1.6rem;
+  z-index: 100;
+  transition: all 0.1s ease-in-out;
+
+  ${FinishArrow}:hover & {
+    visibility: visible;
+  }
+`;
+
 const Container = styled(Box)`
   cursor: url(${(props) => props.cursor}) 50 50, auto;
-  /* cursor: ${(props) =>
-    props.cursor ? "url(" + props.cursor + ") 50 50, auto" : "auto"}; */
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
@@ -680,7 +711,6 @@ const Container = styled(Box)`
     height: auto;
   }
 `;
-
 const Script = styled(Box)`
   width: ${({ props }) => (props.user ? "100vw" : "80vw")};
   height: 80vh;
@@ -817,7 +847,6 @@ const TextArea = styled(Box)`
 `;
 
 const Symbol = styled.span`
-  /* margin: auto; */
   height: 3rem;
   vertical-align: bottom;
   padding-bottom: 1rem;

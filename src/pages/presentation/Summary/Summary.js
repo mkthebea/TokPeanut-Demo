@@ -3,10 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ResponsiveLine } from "@nivo/line";
 import Nav from "../../../component/layout/Nav";
 
-import axios from "axios";
-import qs from "qs";
-import dayjs from "dayjs";
-
 import styled from "@emotion/styled";
 import { createTheme, Divider, Icon, ThemeProvider } from "@mui/material";
 import {
@@ -24,7 +20,6 @@ import StarIcon from "@mui/icons-material/Star";
 import CircleIcon from "@mui/icons-material/Circle";
 
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import api from "../../../api";
 
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
@@ -77,7 +72,6 @@ const Summary = () => {
         pointBorderColor={{ from: "serieColor" }}
         enablePointLabel={true}
         pointLabelYOffset={-16}
-        // enableArea={recommended ? true : false}
         // areaBaselineValue={recommended}
         useMesh={true}
         crosshairType="x"
@@ -153,198 +147,167 @@ const Summary = () => {
     []
   );
 
-  // mock data
-  // const feedback = [
-  //   {
-  //     id: "feedback",
-  //     data: [
-  //       {
-  //         x: "speech 1",
-  //         y: 27,
-  //       },
-  //       {
-  //         x: "speech 2",
-  //         y: 11,
-  //       },
-  //       {
-  //         x: "speech 3",
-  //         y: 15,
-  //       },
-  //     ],
-  //   },
-  // ];
-  // const speed = [
-  //   {
-  //     id: "speed",
-  //     data: [
-  //       {
-  //         x: "speech 1",
-  //         y: 420,
-  //       },
-  //       {
-  //         x: "speech 2",
-  //         y: 234,
-  //       },
-  //       {
-  //         x: "speech 3",
-  //         y: 302,
-  //       },
-  //     ],
-  //   },
-  // ];
-  // const pause = [
-  //   {
-  //     id: "pause",
-  //     data: [
-  //       {
-  //         x: "speech 1",
-  //         y: 27,
-  //       },
-  //       {
-  //         x: "speech 2",
-  //         y: 20,
-  //       },
-  //       {
-  //         x: "speech 3",
-  //         y: 15,
-  //       },
-  //     ],
-  //   },
-  // ];
-  // const hz = [
-  //   {
-  //     id: "hz",
-  //     data: [
-  //       {
-  //         x: "speech 1",
-  //         y: 440,
-  //       },
-  //       {
-  //         x: "speech 2",
-  //         y: 390,
-  //       },
-  //       {
-  //         x: "speech 3",
-  //         y: 300,
-  //       },
-  //     ],
-  //   },
-  // ];
-
-  const location = useLocation();
-  const query = qs.parse(location.search, {
-    ignoreQueryPrefix: true,
-  });
-  const presentation_id = query.presentation_id;
-
-  const patchBookmark = async (e, selectedSpeechId) => {
-    e.stopPropagation();
-    const isBookmarked = e.target.checked;
-    try {
-      const res = await api.patch(
-        `/presentations/${presentation_id}/speeches/${selectedSpeechId}`,
+  // dummy data
+  const [feedback, setFeedback] = useState([
+    {
+      id: "feedback",
+      data: [
         {
-          params: {
-            "presentation-id": presentation_id,
-            "speech-id": selectedSpeechId,
-          },
-          bookmarked: isBookmarked,
-        }
+          id: 1,
+          x: "speech 1",
+          y: 27,
+        },
+        {
+          id: 2,
+          x: "speech 2",
+          y: 11,
+        },
+        {
+          id: 3,
+          x: "speech 3",
+          y: 15,
+        },
+      ],
+    },
+  ]);
+  const [speed, setSpeed] = useState([
+    {
+      id: "speed",
+      data: [
+        {
+          id: 1,
+          x: "speech 1",
+          y: 420,
+        },
+        {
+          id: 2,
+          x: "speech 2",
+          y: 234,
+        },
+        {
+          id: 3,
+          x: "speech 3",
+          y: 302,
+        },
+      ],
+    },
+  ]);
+  const [pause, setPause] = useState([
+    {
+      id: "pause",
+      data: [
+        {
+          id: 1,
+          x: "speech 1",
+          y: 27,
+        },
+        {
+          id: 2,
+          x: "speech 2",
+          y: 20,
+        },
+        {
+          id: 3,
+          x: "speech 3",
+          y: 15,
+        },
+      ],
+    },
+  ]);
+  const [hz, setHz] = useState([
+    {
+      id: "hz",
+      data: [
+        {
+          id: 1,
+          x: "speech 1",
+          y: 440,
+        },
+        {
+          id: 2,
+          x: "speech 2",
+          y: 390,
+        },
+        {
+          id: 3,
+          x: "speech 3",
+          y: 300,
+        },
+      ],
+    },
+  ]);
+
+  const [speechList, setSpeechList] = useState([
+    {
+      id: 1,
+      createdDate: "2024-02-27",
+      recordDone: true,
+      bookmarked: true,
+    },
+    {
+      id: 2,
+      createdDate: "2024-03-11",
+      recordDone: true,
+      bookmarked: false,
+    },
+    {
+      id: 3,
+      createdDate: "2024-03-14",
+      recordDone: false,
+      bookmarked: true,
+    },
+  ]);
+
+  const patchBookmark = useCallback(
+    (e, selectedSpeechId) => {
+      e.stopPropagation();
+      const isBookmarked = e.target.checked;
+      setSpeechList(
+        speechList.map((s) =>
+          s.id === selectedSpeechId ? { ...s, bookmarked: isBookmarked } : s
+        )
       );
-      console.log("patch bookmark response:", res);
-      getSpeechList();
-    } catch (err) {
-      console.log("patch bookmark error:", err);
-    }
-  };
-
-  const [speechList, setSpeechList] = useState([]);
-  const [feedback, setFeedback] = useState([]);
-  const [speed, setSpeed] = useState([]);
-  const [pause, setPause] = useState([]);
-  const [hz, setHz] = useState([]);
-
-  const setData = useCallback((data) => {
-    let feedbackData = [];
-    let speedData = [];
-    let pauseData = [];
-    let hzData = [];
-    for (let i = 0; i < data.length; i++) {
-      feedbackData.push({ x: `speech ${i + 1}`, y: data[i].feedbackCount });
-      speedData.push({ x: `speech ${i + 1}`, y: data[i].avgLPM });
-      pauseData.push({ x: `speech ${i + 1}`, y: data[i].pauseRadio });
-      hzData.push({ x: `speech ${i + 1}`, y: data[i].avgF0 });
-    }
-    setFeedback([{ id: "feedback", data: feedbackData }]);
-    setSpeed([{ id: "speed", data: speedData }]);
-    setPause([{ id: "pause", data: pauseData }]);
-    setHz([{ id: "hz", data: hzData }]);
-  }, []);
-
-  // 현재 프레젠테이션의 스피치 리스트 받아오기
-  const getSpeechList = useCallback(async () => {
-    try {
-      const res = await api.get(`/presentations/${presentation_id}/speeches`);
-      console.log("speech list response:", res);
-      res.data.forEach((speech) => {
-        const date = dayjs(speech.createdDate);
-        speech.createdDate = dayjs().to(date);
-      });
-      setData(res.data);
-      setSpeechList(res.data);
-    } catch (err) {
-      console.log("speech list error:", err);
-    }
-  }, []);
-
-  useEffect(() => {
-    getSpeechList();
-  }, []);
+    },
+    [speechList]
+  );
 
   const navigate = useNavigate();
 
-  const navigateToSpeech = (speech_id, index) => {
+  const navigateToSpeech = useCallback((speech_id, index) => {
     if (editMode) return;
     // 녹음이 완료되지 않은 경우 연습 화면으로 이동
     if (!speechList[index].recordDone) {
-      navigate(
-        `/presentation/practice?presentation_id=${presentation_id}&speech_id=${speech_id}`
-      );
+      navigate(`/presentation/practice`);
     } else {
-      navigate(
-        `/presentation/speech?presentation_id=${presentation_id}&speech_id=${speech_id}`
-      );
+      navigate(`/presentation/speech`);
     }
-  };
+  }, []);
 
   const [editMode, setEditMode] = useState(false);
-  const handleDelete = async (e, speech_id) => {
-    e.stopPropagation();
-    if (
-      window.confirm(
-        "해당 스피치를 삭제하시겠습니까? 연관된 스피치의 스크립트도 삭제됩니다."
-      )
-    ) {
-      try {
-        const res = await api.delete(
-          `/presentations/${presentation_id}/speeches/${speech_id}`,
-          {
-            params: {
-              "presentation-id": presentation_id,
-              "speech-id": speech_id,
-            },
-          }
-        );
-        console.log("delete speech response:", res);
+  const handleDelete = useCallback(
+    (e, speech_id) => {
+      e.stopPropagation();
+      if (
+        window.confirm(
+          "해당 스피치를 삭제하시겠습니까? 연관된 스피치의 스크립트도 삭제됩니다."
+        )
+      ) {
+        setSpeechList(speechList.filter((s) => s.id !== speech_id));
+        const feedbackData = feedback[0].data.filter((f) => f.id !== speech_id);
+        const speedData = speed[0].data.filter((s) => s.id !== speech_id);
+        const pauseData = pause[0].data.filter((p) => p.id !== speech_id);
+        const hzData = hz[0].data.filter((h) => h.id !== speech_id);
+        setFeedback([{ id: "feedback", data: feedbackData }]);
+        setSpeed([{ id: "speed", data: speedData }]);
+        setPause([{ id: "pause", data: pauseData }]);
+        setHz([{ id: "hz", data: hzData }]);
         alert("삭제되었습니다.");
-        getSpeechList();
-      } catch (err) {
-        console.log("delete speech error:", err);
+      } else {
+        alert("삭제가 취소되었습니다.");
       }
-    } else {
-      alert("삭제가 취소되었습니다.");
-    }
-  };
+    },
+    [feedback, speed, pause, hz, speechList]
+  );
 
   return (
     <>

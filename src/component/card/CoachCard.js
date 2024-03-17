@@ -35,7 +35,6 @@ export default function CoachCard({ profile, n }) {
           <p>{profile.shortIntroduce}&nbsp;</p>
           <div className="btn-wrap">
             <CoachingModal coachUuid={profile.uuid} />
-            {/* <SpeechModal /> */}
           </div>
         </CoachCardWrap>
       </ThemeProvider>

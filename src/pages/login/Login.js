@@ -4,11 +4,9 @@ import styled from "@emotion/styled";
 import { createTheme, Divider, Icon, ThemeProvider } from "@mui/material";
 import { createGlobalStyle } from "styled-components";
 import { Box, IconButton, Button } from "@mui/material";
-import Nav from "../../component/layout/Nav";
 import theme from "../../style/theme";
 import TextField from "@mui/material/TextField";
 import JoinModal from "../../component/modal/JoinModal";
-import api from "../../api";
 import AuthContext from "../../AuthContext";
 
 const Login = () => {
@@ -29,67 +27,35 @@ const Login = () => {
 
   const { authInfo, setAuthInfo } = useContext(AuthContext);
 
-  const [id, setId] = useState("");
-  const [password, setPassword] = useState("");
-  const onChangeId = (e) => {
-    setId(e.target.value);
-  };
-  const onChangePassword = (e) => {
-    setPassword(e.target.value);
-  };
-  const login = async () => {
-    try {
-      const res = await api.post("/accounts/login", {
-        username: id,
-        password: password,
-      });
-
-      const res_me = await api.get("/accounts/me");
-      if (res_me.data.coachProfile) {
-        setAuthInfo({ nickname: res_me.data.nickname, type: "coach" });
-        navigate("/user/coachmatching");
-      } else {
-        setAuthInfo({ nickname: res_me.data.nickname, type: "user" });
-        navigate("/presentation");
-      }
-    } catch (err) {
-      alert("로그인에 실패했습니다. \nID와 PW를 확인하세요.");
+  const login = (loginType) => {
+    if (loginType === "user") {
+      setAuthInfo({ nickname: "사용자 체험", type: "user" });
+      navigate("/presentation");
+    } else {
+      setAuthInfo({ nickname: "코치 체험", type: "coach" });
+      navigate("/user/coachmatching");
     }
   };
 
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
-      {/* <Nav /> */}
       <LoginWrap>
         <LoginBox>
           <PaddingWrap>
             <h1>TOKPEANUT</h1>
-            <div className="input-wrap">
-              <StyledTextField
-                id="id"
-                variant="outlined"
-                type="text"
-                placeholder="아이디를 입력하세요"
-                fullWidth
-                onChange={onChangeId}
-              />
-              <StyledTextField
-                id="pw"
-                variant="outlined"
-                type="password"
-                placeholder="비밀번호를 입력하세요"
-                fullWidth
-                onChange={onChangePassword}
-              />
-            </div>
-            <div className="join-text">
-              <h3>톡피넛이 처음이신가요?</h3>
-              <JoinModal />
-            </div>
-            <LoginBtn variant="contained" fullWidth onClick={login}>
-              로그인
-            </LoginBtn>
+            <Desc>
+              이 페이지는 스피치 교정 솔루션 톡피넛의 데모 버전입니다. <br />
+              <br />
+              아래의 버튼을 눌러 스피치 교정을 원하는 사용자 또는 <br />
+              스피치 코치로 로그인 하실 수 있습니다.
+            </Desc>
+            <DemoBtn variant="contained" onClick={() => login("user")}>
+              사용자 체험하기
+            </DemoBtn>
+            <DemoBtn variant="contained" onClick={() => login("coach")}>
+              코치 체험하기
+            </DemoBtn>
           </PaddingWrap>
         </LoginBox>
       </LoginWrap>
@@ -111,40 +77,35 @@ const LoginWrap = styled(Box)`
   height: 100vh;
 `;
 
+const DemoBtn = styled(Button)`
+  height: 5rem;
+  box-shadow: none;
+  font-size: 1.8rem;
+  color: #fff;
+  padding: 1.2rem 2rem;
+  margin: 0 1rem;
+  width: 20rem;
+`;
+
+const Desc = styled.p`
+  font-size: 1.6rem;
+  padding: 0 2rem;
+  color: #3b3b3b;
+  line-height: 150%;
+  margin-bottom: 2rem;
+  text-align: center;
+`;
+
 const LoginBox = styled(Box)`
-  background-color: #fff;
   border-radius: 10px;
-  /* box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.05); */
   border: 0.5px solid #3b3b3b;
-  margin-top: 8rem;
   h1 {
     font-size: 4rem;
     color: #ff7134;
     font-weight: bold;
     line-height: 150%;
-    margin-bottom: 5rem;
+    margin-bottom: 2rem;
     text-align: center;
-  }
-  .input-wrap {
-    & > div {
-      margin-bottom: 1rem;
-    }
-  }
-  .join-text {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 1rem;
-    h3 {
-      font-size: 1.4rem;
-      color: #3b3b3b;
-      line-height: 150%;
-    }
-  }
-  .social-login {
-    button:first-of-type {
-      margin: 2rem 0 1rem 0;
-    }
   }
   @media ${() => theme.device.mobile} {
     margin-top: 0;
@@ -158,33 +119,6 @@ const PaddingWrap = styled(Box)`
   padding: 5rem 8rem;
   @media ${() => theme.device.mobile} {
     padding: 10rem 2rem 0 2rem;
-  }
-`;
-
-const LoginBtn = styled(Button)`
-  box-shadow: none;
-  font-size: 1.8rem;
-  color: #fff;
-  padding: 1.2rem 2rem;
-  margin: 2rem 0;
-`;
-
-const OutlinedBtn = styled(Button)`
-  color: #3b3b3b;
-  padding: 1.2rem 2rem;
-  font-size: 1.8rem;
-  display: flex;
-  align-items: center;
-  img {
-    margin-right: 1rem;
-  }
-`;
-
-const StyledTextField = styled(TextField)`
-  input {
-    font-size: 1.6rem;
-    color: #3b3b3b;
-    padding: 1.2rem 2rem;
   }
 `;
 
